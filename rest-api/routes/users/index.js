@@ -31,11 +31,9 @@ app.post("/users/create-new-user", async (req, res) => {
             expires: new Date(response.authTokenExpirationTimestamp * 1000),
             httpOnly: true,
             encode: String,
-            secure: req.secure || req.headers["x-forwarded-proto"] === "https",
-            domain:
-                process.env.NODE_ENV === "development"
-                    ? ""
-                    : utils.getDomainFromUrl(config.productionWebsiteUrl),
+            secure: true,
+            SameSite: "None",
+            domain: ".vercel.app"
            
         };
 

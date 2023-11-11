@@ -41,29 +41,29 @@ module.exports = {
      * Step 5 - Send a success response back to the website.
      */
     submitNewItem: async (title, url, text, authUser) => {
-        const rlnIdentifier = BigInt(5566)
+        const rlnIdentifier = BigInt(5568)
         const messageLimit = BigInt(1);
-         const epoch = BigInt(1234)
-        // const signerTestERC20Amount = BigInt(100000000)
-        // const slasher = "0x0000000000000000000000000000000000009876"
+        const epoch = BigInt(2337)
+        const signerTestERC20Amount = BigInt(100000000)
+        const slasher = "0x0000000000000000000000000000000000009876"
     
-        // const rlnContractArgs = {
-        //     minimalDeposit: BigInt(100),
-        //     treeDepth: treeDepth,
-        //     feePercentage: BigInt(10),
-        //     feeReceiver: "0x0000000000000000000000000000000000006789",
-        //     freezePeriod: BigInt(1),
-        // }
-        // console.log(`Connecting to endpoint at ${rlnurl}`)
+        const rlnContractArgs = {
+            minimalDeposit: BigInt(100),
+            treeDepth: treeDepth,
+            feePercentage: BigInt(10),
+            feeReceiver: "0x0000000000000000000000000000000000006789",
+            freezePeriod: BigInt(1),
+        }
+        console.log(`Connecting to endpoint at ${rlnurl}`)
         const provider = new ethers.JsonRpcProvider(rlnurl)
-        const signer = await provider.getSigner(0)
+        const signer = await provider.getSigner(authUser.address);
         // // Here we use a mock verifier since we don't have a proof verifier deployed yet.
         // console.log(`Deploying contracts...`)
         // const verifierContract = await deployVerifier(signer)
         // console.log(`Deployed mock verifier at ${await verifierContract.getAddress()}`)
         // const erc20Contract = await deployERC20(signer, signerTestERC20Amount)
         // console.log(`Deployed test ERC20 at ${await erc20Contract.getAddress()}`)
-         const rlnContractAddress = "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0";
+        //const rlnContractAddress = "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0";
         // const rlnContract = await deployRLNContract(
         //     signer,
         //     await erc20Contract.getAddress(),
@@ -74,7 +74,8 @@ module.exports = {
         //     rlnContractArgs.feeReceiver,
         //     rlnContractArgs.freezePeriod,
         // )
-        // const rlnContractAddress = await rlnContract.getAddress()
+        //const rlnContractAddress = await rlnContract.getAddress()
+        const rlnContractAddress = "0xE831a22E1b09D2F25dae664BAe2EA45F8e257dd0"
         const rlnContractAtBlock = await provider.getBlockNumber()
         console.log(`Deployed RLN contract at ${rlnContractAddress} at block ${rlnContractAtBlock}`)
     
@@ -93,8 +94,15 @@ module.exports = {
         async function mineBlocks(numBlocks) {
             provider.send("hardhat_mine", ["0x" + numBlocks.toString(16)])
         }
-    
+        // class ResettableCache extends MemoryCache {
+        //     async reset() {
+        //         this.cache = {}
+        //     }
+        // }
+        // const resettableCache = new ResettableCache()
         const rln = await createRLNInstance()
+        // rln.setCache(resettableCache)
+
         console.log(`rln created: identityCommitment=${rln.identityCommitment}`)
         if (await rln.isRegistered()) {
             throw new Error(`rln should not have yet registered`);
@@ -102,7 +110,7 @@ module.exports = {
         console.log(`Try with rate limit ${messageLimit}...`)
     
         // /* Register */
-    
+      
         await rln.register(messageLimit);
         if (!await rln.isRegistered()) {
             throw new Error(`Failed to register`);
@@ -111,25 +119,33 @@ module.exports = {
     
         /* Create Proof */
         console.log(`Creating proof...`)
-        let message = hashTitleAndContent(title, text, url);
+        let hashed_message = hashTitleAndContent(title, text, url);
        
-        const proof = await rln.createProof(epoch, message);
-        console.log(`Hashed message : ${message}`)
+        const proof = await rln.createProof(epoch, hashed_message);
+         //resettableCache.reset()
+        console.log(`Hashed message : ${hashed_message}`)
         console.log(`Proof identifier : ${proof.rlnIdentifier}`)
+        console.log(`epoc : ${proof.epoch}`)
+        console.log(`proof pi : ${proof.snarkProof.proof.pi_a}`)
 
-        if (!await rln.verifyProof(epoch, message, proof)) {
+        if (!await rln.verifyProof(epoch, hashed_message, proof)) {
             throw new Error(`Proof is invalid`);
         }
-        console.log(`Successfully created proof`);
-        console.log(`Try creating proof for another message but it should exceed the rate limit ${messageLimit}...`)
-        try {
-            const res0 = await rln.saveProof(proof);
 
-            console.log(`status is :${res0.status}`);
-            console.log(`valid status is :${Status.DUPLICATE}`);
-            if (res0.status != Status.VALID) {
-                throw new Error(`rlnAnother's proof should have been valid`);
-            }
+        // const proof2 = await rln.createProof(epoch, hashed_message);
+
+        // if (!await rln.verifyProof(epoch, hashed_message, proof2)) {
+        //     throw new Error(`Proof is invali2`);
+        // }
+        // console.log(`Successfully created proof`);
+       
+        try {
+            //const res0 = await rln.saveProof(proof);
+            //console.log(`status is :${res0.status}`);
+            //console.log(`status is :${res0.msg}`);
+            // if (res0.status != Status.VALID) {
+            //     throw new Error(`rlnAnother's proof should have been valid`);
+            // }
       
             const isValidUrl = utils.isValidUrl(url);
 

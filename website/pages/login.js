@@ -97,6 +97,7 @@ export default function Login({ goto }) {
                         loginSubmitError: true,
                     });
                 } else {
+                    console.log(response, goto);
                     Router.push(`/${goto}`);
                     // location.href = `/${goto}`;
                 }

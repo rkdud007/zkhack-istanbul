@@ -1,6 +1,6 @@
 const config = {
     /// SITE CONFIGURATION
-    productionWebsiteUrl: "https://zonke.rs",
+    productionWebsiteUrl: "https://zkhack-istanbul-saa4.vercel.app/",
 
     /// SITE CONFIGURATION
     userCookieExpirationLengthInDays: 365,

@@ -2,6 +2,10 @@ const xss = require("xss");
 const linkifyUrls = require("linkify-urls");
 const moment = require("moment");
 
+const ethers = require("ethers");
+const { MemoryCache, RLN, Status } = require("rlnjs");
+const { deployERC20, deployRLNContract, deployVerifier, treeDepth, url: rlnurl, hashTitleAndContent } = require("./configs");
+
 const ItemModel = require("../../models/item.js");
 const UserModel = require("../../models/user.js");
 const UserVoteModel = require("../../models/userVote.js");
@@ -37,55 +41,155 @@ module.exports = {
      * Step 5 - Send a success response back to the website.
      */
     submitNewItem: async (title, url, text, authUser) => {
-        const isValidUrl = utils.isValidUrl(url);
-
-        if (url && !isValidUrl) {
-            throw { invalidUrlError: true };
+        const rlnIdentifier = BigInt(5566)
+        const messageLimit = BigInt(1);
+         const epoch = BigInt(1234)
+        // const signerTestERC20Amount = BigInt(100000000)
+        // const slasher = "0x0000000000000000000000000000000000009876"
+    
+        // const rlnContractArgs = {
+        //     minimalDeposit: BigInt(100),
+        //     treeDepth: treeDepth,
+        //     feePercentage: BigInt(10),
+        //     feeReceiver: "0x0000000000000000000000000000000000006789",
+        //     freezePeriod: BigInt(1),
+        // }
+        // console.log(`Connecting to endpoint at ${rlnurl}`)
+        const provider = new ethers.JsonRpcProvider(rlnurl)
+        const signer = await provider.getSigner(0)
+        // // Here we use a mock verifier since we don't have a proof verifier deployed yet.
+        // console.log(`Deploying contracts...`)
+        // const verifierContract = await deployVerifier(signer)
+        // console.log(`Deployed mock verifier at ${await verifierContract.getAddress()}`)
+        // const erc20Contract = await deployERC20(signer, signerTestERC20Amount)
+        // console.log(`Deployed test ERC20 at ${await erc20Contract.getAddress()}`)
+         const rlnContractAddress = "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0";
+        // const rlnContract = await deployRLNContract(
+        //     signer,
+        //     await erc20Contract.getAddress(),
+        //     await verifierContract.getAddress(),
+        //     rlnContractArgs.minimalDeposit,
+        //     rlnContractArgs.treeDepth,
+        //     rlnContractArgs.feePercentage,
+        //     rlnContractArgs.feeReceiver,
+        //     rlnContractArgs.freezePeriod,
+        // )
+        // const rlnContractAddress = await rlnContract.getAddress()
+        const rlnContractAtBlock = await provider.getBlockNumber()
+        console.log(`Deployed RLN contract at ${rlnContractAddress} at block ${rlnContractAtBlock}`)
+    
+        async function createRLNInstance() {
+            return await RLN.createWithContractRegistry({
+                /* Required */
+                rlnIdentifier,
+                provider,
+                contractAddress: rlnContractAddress,
+                /* Optional */
+                contractAtBlock: rlnContractAtBlock,
+                signer,
+            })
         }
-
-        // filter content
-        title = title.trim();
-        title = xss(title);
-
-        url = url.trim();
-        url = xss(url);
-
-        if (text) {
-            text = text.trim();
-            text = text.replace(/<[^>]+>/g, "");
-            text = text.replace(/\*([^*]+)\*/g, "<i>$1</i>");
-            text = linkifyUrls(text);
-            text = xss(text);
+    
+        async function mineBlocks(numBlocks) {
+            provider.send("hardhat_mine", ["0x" + numBlocks.toString(16)])
         }
-
-        const domain = url ? utils.getDomainFromUrl(url) : "";
-        const itemType = utils.getItemType(title, url, text);
-
-        // submit new post/item
-        const newItem = new ItemModel({
-            id: utils.generateUniqueId(12),
-            by: authUser.username,
-            title: title,
-            type: itemType,
-            url: url,
-            domain: domain,
-            text: text,
-            created: moment().unix(),
-            dead: authUser.shadowBanned ? true : false,
-        });
-
-        const newItemDoc = await newItem.save();
-
-        await UserModel.findOneAndUpdate(
-            { username: authUser.username },
-            { $inc: { karma: 1 } }
-        ).exec();
-
-        if (!authUser.shadowBanned) {
-            await searchApi.addNewItem(newItemDoc);
+    
+        const rln = await createRLNInstance()
+        console.log(`rln created: identityCommitment=${rln.identityCommitment}`)
+        if (await rln.isRegistered()) {
+            throw new Error(`rln should not have yet registered`);
         }
+        console.log(`Try with rate limit ${messageLimit}...`)
+    
+        // /* Register */
+    
+        await rln.register(messageLimit);
+        if (!await rln.isRegistered()) {
+            throw new Error(`Failed to register`);
+        }
+        console.log(`Successfully registered`);
+    
+        /* Create Proof */
+        console.log(`Creating proof...`)
+        let message = hashTitleAndContent(title, text, url);
+       
+        const proof = await rln.createProof(epoch, message);
+        console.log(`Hashed message : ${message}`)
+        console.log(`Proof identifier : ${proof.rlnIdentifier}`)
 
-        return { success: true };
+        if (!await rln.verifyProof(epoch, message, proof)) {
+            throw new Error(`Proof is invalid`);
+        }
+        console.log(`Successfully created proof`);
+        console.log(`Try creating proof for another message but it should exceed the rate limit ${messageLimit}...`)
+        try {
+            const res0 = await rln.saveProof(proof);
+
+            console.log(`status is :${res0.status}`);
+            console.log(`valid status is :${Status.DUPLICATE}`);
+            if (res0.status != Status.VALID) {
+                throw new Error(`rlnAnother's proof should have been valid`);
+            }
+      
+            const isValidUrl = utils.isValidUrl(url);
+
+            if (url && !isValidUrl) {
+                throw { invalidUrlError: true };
+            }
+    
+            // filter content
+            title = title.trim();
+            title = xss(title);
+    
+            url = url.trim();
+            url = xss(url);
+    
+            if (text) {
+                text = text.trim();
+                text = text.replace(/<[^>]+>/g, "");
+                text = text.replace(/\*([^*]+)\*/g, "<i>$1</i>");
+                text = linkifyUrls(text);
+                text = xss(text);
+            }
+    
+            const domain = url ? utils.getDomainFromUrl(url) : "";
+            const itemType = utils.getItemType(title, url, text);
+    
+            // submit new post/item
+            const newItem = new ItemModel({
+                id: utils.generateUniqueId(12),
+                by: authUser.username,
+                title: title,
+                type: itemType,
+                url: url,
+                domain: domain,
+                text: text,
+                created: moment().unix(),
+                dead: authUser.shadowBanned ? true : false,
+            });
+    
+            const newItemDoc = await newItem.save();
+    
+            await UserModel.findOneAndUpdate(
+                { username: authUser.username },
+                { $inc: { karma: 1 } }
+            ).exec();
+    
+            if (!authUser.shadowBanned) {
+                await searchApi.addNewItem(newItemDoc);
+            }
+    
+            return { success: true };
+        } catch (e) {
+            const message = (e).toString()
+            if (!message.includes(`Error: Message ID counter exceeded message limit ${messageLimit}`)) {
+                throw e
+            }
+        }
+        console.log(`Failed to create proof for another message as expected`);
+
+
+       
     },
 
     getItemById: async (itemId, page, authUser) => {

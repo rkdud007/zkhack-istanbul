@@ -15,6 +15,7 @@
         "cookie-parser": "^1.4.5",
         "cors": "^2.8.5",
         "dotenv": "^8.2.0",
+        "ethers": "^6.8.1",
         "express": "^4.17.1",
         "handlebars": "^4.7.7",
         "helmet": "^4.4.1",
@@ -26,6 +27,7 @@
         "nodemailer": "^6.6.0",
         "nodemailer-mailgun-transport": "^2.0.3",
         "psl": "^1.8.0",
+        "rlnjs": "^3.3.0",
         "validator": "^13.6.0",
         "xss": "^1.0.9"
     },

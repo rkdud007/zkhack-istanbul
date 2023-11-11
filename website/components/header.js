@@ -4,6 +4,7 @@ import Router from "next/router";
 import logoutUser from "../apix/users/logoutUser";
 
 export default function Header({ userSignedIn, username, karma, goto, pageName, label }) {
+    console.log(userSignedIn, goto);
     const requestLogout = () => {
         logoutUser(() => {
             Router.push(Router.asPath);

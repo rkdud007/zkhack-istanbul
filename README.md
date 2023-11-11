@@ -1,4 +1,4 @@
-# zuke.rs
+# ZKHackerNews
 
 ZK version HackerNews made from ZK Hack Istanbul 2023.
 

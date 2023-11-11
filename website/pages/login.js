@@ -234,7 +234,7 @@ export default function Login({ goto }) {
 
             <div
                 style={{
-                    borderTop: "2px solid #6245ea",
+                    borderTop: "2px solid #B900AA",
                     paddingBottom: "20px",
                 }}
             />

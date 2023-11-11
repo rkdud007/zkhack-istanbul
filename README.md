@@ -1,8 +1,8 @@
-# ZKHackerNews
+# zuke.rs
 
 ZK version HackerNews made from ZK Hack Istanbul 2023.
 
-![image of frontpage ZKHackerNews](https://i.imgur.com/MuXTuTa.png)
+![](.github/zkhackernews.png)
 
 ## Dependecies
 

@@ -1,7 +1,7 @@
 .search-header {
     display: flex;
     align-items: center;
-    background: #6245ea;
+    background: #B900AA;
     height: auto;
     padding: 4px;
     position: relative;
@@ -40,7 +40,7 @@
     position: absolute;
     top: 3.5px;
     left: 12px;
-    color: #6245ea;
+    color: #B900AA;
     pointer-events: none;
 }
 

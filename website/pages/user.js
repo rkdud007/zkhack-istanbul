@@ -12,7 +12,7 @@ import updateUserData from "../apix/users/updateUserData.js";
 import addUserShadowBan from "../apix/moderation/addUserShadowBan.js";
 import removeUserShadowBan from "../apix/moderation/removeUserShadowBan.js";
 import addUserBan from "../apix/moderation/addUserBan.js";
-import removeUserBan from "../apix/moderation/removeUserBan.js";
+import removeUserBan from "../apix/users/updateUserData.js";
 
 export default function User({
     username,

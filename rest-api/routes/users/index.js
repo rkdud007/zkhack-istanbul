@@ -89,7 +89,7 @@ app.put("/users/login", async (req, res) => {
             cookieSettings
         );
 
-        res.json({ success: true });
+        res.json({ success: true, response: response });
     } catch (error) {
         console.log(error);
         if (!(error instanceof Error)) {

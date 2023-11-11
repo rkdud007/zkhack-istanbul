@@ -31,9 +31,11 @@ app.post("/users/create-new-user", async (req, res) => {
             expires: new Date(response.authTokenExpirationTimestamp * 1000),
             httpOnly: true,
             encode: String,
-            secure: true,
-            SameSite: "None",
-            domain: ".vercel.app"
+            secure: req.secure || req.headers["x-forwarded-proto"] === "https",
+            domain:
+                process.env.NODE_ENV === "development"
+                    ? ""
+                    : utils.getDomainFromUrl(config.productionWebsiteUrl),
            
         };
 
@@ -87,7 +89,7 @@ app.put("/users/login", async (req, res) => {
             cookieSettings
         );
 
-        res.json({ success: true, response: response });
+        res.json({ success: true });
     } catch (error) {
         console.log(error);
         if (!(error instanceof Error)) {

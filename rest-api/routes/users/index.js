@@ -36,7 +36,7 @@ app.post("/users/create-new-user", async (req, res) => {
                 process.env.NODE_ENV === "development"
                     ? ""
                     : utils.getDomainFromUrl(config.productionWebsiteUrl),
-            sameSite: "none",
+           
         };
 
         /**

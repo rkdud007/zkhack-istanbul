@@ -64,7 +64,7 @@ Ex. getting item on front page:
 
 ```javascript
 // page/index.js
-import getRankedItemsByPage from "../api/items/getRankedItemsByPage.js"; /* GET ITEM API */
+import getRankedItemsByPage from "../apix/items/getRankedItemsByPage.js"; /* GET ITEM API */
 
 export default function Index({ items, authUserData, ... }) {
     ...

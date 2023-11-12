@@ -45,6 +45,7 @@ import "../styles/pages/formatdoc.css";
 import "../styles/pages/newsfaq.css";
 import "../styles/pages/newsguidelines.css";
 import "../styles/pages/showguidelines.css";
+import "../styles/pages/discord-redirect.css";
 
 /// SEARCH PAGES
 import "../styles/search/index.css";

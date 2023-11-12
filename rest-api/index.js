@@ -65,6 +65,7 @@ app.use(require("./routes/users/index.js"));
 app.use(require("./routes/items/index.js"));
 app.use(require("./routes/comments/index.js"));
 app.use(require("./routes/moderation/index.js"));
+app.use(require('./routes/discord/index.js'));
 
 
 /// RUN SERVER

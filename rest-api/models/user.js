@@ -19,14 +19,14 @@ const bcrypt = require("bcrypt");
 const UserSchema = new mongoose.Schema({
     username: {
         type: String,
-        unique: true,
-        required: true,
     },
 
     password: {
         type: String,
-        required: true,
     },
+
+	discordId: String,
+	discordUsername: String,
 
     authToken: String,
     authTokenExpiration: Number,

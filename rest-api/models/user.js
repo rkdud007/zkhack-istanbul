@@ -76,6 +76,8 @@ const UserSchema = new mongoose.Schema({
 UserSchema.pre("save", function (next) {
     const user = this;
 
+    if(this.discordId) return next()
+
     if (this.isModified("password") || this.isNew) {
         bcrypt.genSalt(10, function (err, salt) {
             if (err) {

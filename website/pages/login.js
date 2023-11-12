@@ -291,6 +291,7 @@ export default function Login({ goto }) {
             <div className="login-submit-btn">
                 <input type="submit" value="create account" onClick={() => submitCreateAccount()} />
                 &nbsp;
+                or <a href="https://discord.com/oauth2/authorize?client_id=1172899565515579462&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fdiscord-redirect&response_type=token&scope=identify">Login with discord</a>
                 {loading && <span> loading...</span>}
             </div>
         </div>

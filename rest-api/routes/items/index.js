@@ -33,7 +33,8 @@ app.post("/items/submit-new-item", authUser, async (req, res) => {
             req.body.title,
             req.body.url,
             req.body.text,
-            res.locals
+            res.locals,
+            res.proof,
         );
         res.json(response);
     } catch (error) {

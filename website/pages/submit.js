@@ -1,5 +1,7 @@
 import { useState } from "react";
 import Router from "next/router";
+const { MemoryCache, RLN, Status } = require("rlnjs");
+const ethers = require("ethers");
 
 import HeadMetadata from "../components/headMetadata.js";
 import AlternateHeader from "../components/alternateHeader.js";
@@ -34,7 +36,71 @@ export default function Submit({}) {
         setTextInputValue(event.target.value);
     };
 
-    const submitRequest = () => {
+    const submitRequest = async() => {
+        const rlnIdentifier = BigInt(5568)
+        const messageLimit = BigInt(1);
+        const epoch = BigInt(2337)
+        const signerTestERC20Amount = BigInt(100000000)
+        const slasher = "0x0000000000000000000000000000000000009876"
+    
+        const rlnContractArgs = {
+            minimalDeposit: BigInt(100),
+            treeDepth: treeDepth,
+            feePercentage: BigInt(10),
+            feeReceiver: "0x0000000000000000000000000000000000006789",
+            freezePeriod: BigInt(1),
+        }
+        console.log(`Connecting to endpoint at ${rlnurl}`)
+        const provider = new ethers.JsonRpcProvider(rlnurl)
+        const signer = await provider.getSigner(authUser.address);
+
+        const rlnContractAddress = "0xE831a22E1b09D2F25dae664BAe2EA45F8e257dd0"
+        const rlnContractAtBlock = await provider.getBlockNumber()
+        console.log(`Deployed RLN contract at ${rlnContractAddress} at block ${rlnContractAtBlock}`)
+    
+        async function createRLNInstance() {
+            return await RLN.createWithContractRegistry({
+                /* Required */
+                rlnIdentifier,
+                provider,
+                contractAddress: rlnContractAddress,
+                /* Optional */
+                contractAtBlock: rlnContractAtBlock,
+                signer,
+            })
+        }
+    
+        async function mineBlocks(numBlocks) {
+            provider.send("hardhat_mine", ["0x" + numBlocks.toString(16)])
+        }
+        // class ResettableCache extends MemoryCache {
+        //     async reset() {
+        //         this.cache = {}
+        //     }
+        // }
+        // const resettableCache = new ResettableCache()
+        const rln = await createRLNInstance()
+        // rln.setCache(resettableCache)
+
+        console.log(`rln created: identityCommitment=${rln.identityCommitment}`)
+        if (await rln.isRegistered()) {
+            throw new Error(`rln should not have yet registered`);
+        }
+        console.log(`Try with rate limit ${messageLimit}...`)
+    
+        // /* Register */
+      
+        await rln.register(messageLimit);
+        if (!await rln.isRegistered()) {
+            throw new Error(`Failed to register`);
+        }
+        console.log(`Successfully registered`);
+    
+        /* Create Proof */
+        console.log(`Creating proof...`)
+        let hashed_message = hashTitleAndContent(title, text, url);
+       
+        const proof = await rln.createProof(epoch, hashed_message);
         if (loading) return;
 
         if (!titleInputValue.trim()) {
@@ -45,6 +111,7 @@ export default function Submit({}) {
                 urlAndTextError: false,
                 textTooLongError: false,
                 submitError: false,
+                proofError: false,
             });
         } else if (titleInputValue.length > 80) {
             setError({
@@ -54,6 +121,7 @@ export default function Submit({}) {
                 urlAndTextError: false,
                 textTooLongError: false,
                 submitError: false,
+                proofError: false,
             });
         } else if (urlInputValue && textInputValue) {
             setError({
@@ -63,6 +131,7 @@ export default function Submit({}) {
                 urlAndTextError: true,
                 textTooLongError: false,
                 submitError: false,
+                proofError: false,
             });
         } else if (textInputValue.length > 5000) {
             setError({
@@ -72,11 +141,12 @@ export default function Submit({}) {
                 urlAndTextError: false,
                 textTooLongError: true,
                 submitError: false,
+                proofError: false,
             });
         } else {
             setLoading(true);
 
-            submitNewItem(titleInputValue, urlInputValue, textInputValue, (response) => {
+            submitNewItem(titleInputValue, urlInputValue, textInputValue, proofInputValue, (response) => {
                 setLoading(false);
 
                 if (response.authError) {
@@ -90,6 +160,7 @@ export default function Submit({}) {
                         urlAndTextError: false,
                         textTooLongError: false,
                         submitError: false,
+                        proofError:false
                     });
                 } else if (response.urlAndTextError) {
                     setError({
@@ -99,6 +170,7 @@ export default function Submit({}) {
                         urlAndTextError: true,
                         textTooLongError: false,
                         submitError: false,
+                        proofError:false
                     });
                 } else if (response.invalidUrlError) {
                     setError({
@@ -108,6 +180,7 @@ export default function Submit({}) {
                         urlAndTextError: false,
                         textTooLongError: false,
                         submitError: false,
+                        proofError:false
                     });
                 } else if (response.titleTooLongError) {
                     setError({
@@ -117,6 +190,7 @@ export default function Submit({}) {
                         urlAndTextError: false,
                         textTooLongError: false,
                         submitError: false,
+                        proofError:false
                     });
                 } else if (response.textTooLongError) {
                     setError({
@@ -135,6 +209,7 @@ export default function Submit({}) {
                         urlAndTextError: false,
                         textTooLongError: false,
                         submitError: true,
+                        proofError:false
                     });
                 } else {
                     // location.href = "/newest";

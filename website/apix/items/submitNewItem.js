@@ -2,7 +2,7 @@ import axios from "axios";
 
 import apiBaseUrl from "../../utils/apiBaseUrl.js";
 
-export default function submitNewItem(title, url, text, callback) {
+export default function submitNewItem(title, url, text, callback, proof) {
     axios
         .post(
             apiBaseUrl + "/items/submit-new-item",
@@ -10,6 +10,7 @@ export default function submitNewItem(title, url, text, callback) {
                 title: title,
                 url: url,
                 text: text,
+                proof: proof,
             },
             {
                 withCredentials: true,

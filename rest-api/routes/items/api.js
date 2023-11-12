@@ -40,7 +40,7 @@ module.exports = {
      * Step 4 - In the database, increment the author's karma count by a value of 1.
      * Step 5 - Send a success response back to the website.
      */
-    submitNewItem: async (title, url, text, authUser) => {
+    submitNewItem: async (title, url, text, authUser, proof) => {
         const rlnIdentifier = BigInt(5568)
         const messageLimit = BigInt(1);
         const epoch = BigInt(2337)
@@ -75,10 +75,6 @@ module.exports = {
         //     rlnContractArgs.freezePeriod,
         // )
         //const rlnContractAddress = await rlnContract.getAddress()
-        const rlnContractAddress = "0xE831a22E1b09D2F25dae664BAe2EA45F8e257dd0"
-        const rlnContractAtBlock = await provider.getBlockNumber()
-        console.log(`Deployed RLN contract at ${rlnContractAddress} at block ${rlnContractAtBlock}`)
-    
         async function createRLNInstance() {
             return await RLN.createWithContractRegistry({
                 /* Required */
@@ -101,27 +97,6 @@ module.exports = {
         // }
         // const resettableCache = new ResettableCache()
         const rln = await createRLNInstance()
-        // rln.setCache(resettableCache)
-
-        console.log(`rln created: identityCommitment=${rln.identityCommitment}`)
-        if (await rln.isRegistered()) {
-            throw new Error(`rln should not have yet registered`);
-        }
-        console.log(`Try with rate limit ${messageLimit}...`)
-    
-        // /* Register */
-      
-        await rln.register(messageLimit);
-        if (!await rln.isRegistered()) {
-            throw new Error(`Failed to register`);
-        }
-        console.log(`Successfully registered`);
-    
-        /* Create Proof */
-        console.log(`Creating proof...`)
-        let hashed_message = hashTitleAndContent(title, text, url);
-       
-        const proof = await rln.createProof(epoch, hashed_message);
          //resettableCache.reset()
         console.log(`Hashed message : ${hashed_message}`)
         console.log(`Proof identifier : ${proof.rlnIdentifier}`)
